@@ -39,26 +39,5 @@ public class Element {
         elementsMap.put("People", defaultPair);
     }
 }
-public class Main {
-    public static void main(String[] args) {
-        // Create an Element object
-        Element element = new Element();
 
-        // Get the state of the Light element
-        Pair<Boolean, Short> lightState = element.get("Light");
-        System.out.println("Light State: " + lightState.getKey() + ", " + lightState.getValue());
-
-        // Set the Light element to ON (true) with intensity 100
-        element.set("Light", new Pair<>(true, (short) 100));
-
-        // Get the updated state of Light
-        lightState = element.get("Light");
-        System.out.println("Updated Light State: " + lightState.getKey() + ", " + lightState.getValue());
-
-        // Turn off all elements
-        element.turnOff();
-        lightState = element.get("Light");
-        System.out.println("After Reset Light State: " + lightState.getKey() + ", " + lightState.getValue());
-    }
-}
 
