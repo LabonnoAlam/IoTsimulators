@@ -1,1 +1,214 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+// Element class to manage the elements in the system (light, shading, fan, etc.)
+class Element {
+    private Map<String, ElementStatus> statusMap;
+
+    public Element() {
+        statusMap = new HashMap<>();
+        // Initialize elements with their default status (OFF/0)
+        statusMap.put("Light", new ElementStatus(false, -1));
+        statusMap.put("Shading", new ElementStatus(false, -1));
+        statusMap.put("Fan", new ElementStatus(false, -1));
+        statusMap.put("AC", new ElementStatus(false, -1));
+        statusMap.put("Heater", new ElementStatus(false, -1));
+        statusMap.put("People", new ElementStatus(false, 0)); // No people in the room initially
+    }
+
+    public Map<String, ElementStatus> getAll() {
+        return statusMap;
+    }
+
+    public ElementStatus get(String key) {
+        return statusMap.getOrDefault(key, new ElementStatus(false, -1));
+    }
+
+    public void set(String key, ElementStatus status) {
+        statusMap.put(key, status);
+    }
+
+    // Turn off all systems
+    public void turnOff() {
+        for (Map.Entry<String, ElementStatus> entry : statusMap.entrySet()) {
+            entry.setValue(new ElementStatus(false, -1));
+        }
+    }
+}
+
+class ElementStatus {
+    public boolean isOn;
+    public int value;
+
+    public ElementStatus(boolean isOn, int value) {
+        this.isOn = isOn;
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return (isOn ? "ON" : "OFF") + (value != -1 ? " [" + value + "°C]" : "");
+    }
+}
+
+public class IoTManagementSystem {
+
+    public static void guiLineDivider() {
+        System.out.println("--------------------------------------------");
+        System.out.println("--------------------------------------------");
+    }
+
+    public static void handleInvalidInput(Scanner sc) {
+        sc.next();  // Clear invalid input
+        System.out.println("Invalid input. Please try again.");
+    }
+
+    public static void showStatus(Element element) {
+        Map<String, ElementStatus> statusMap = element.getAll();
+        for (Map.Entry<String, ElementStatus> entry : statusMap.entrySet()) {
+            String key = entry.getKey();
+            ElementStatus status = entry.getValue();
+            System.out.print("\t* " + key + ": ");
+            if (key.equals("People")) {
+                System.out.println(status.isOn ? status.value + " people" : "No people");
+            } else {
+                System.out.println(status);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Element element = new Element();
+        boolean programClose = false;
+
+        System.out.println("----- Smart Building Energy Management System -----");
+
+        while (!programClose) {
+            System.out.println("Status:");
+            showStatus(element);
+            guiLineDivider();
+
+            short opt = getUserOption(scanner, "Choose an option\n\t1. Update\n\t0. Exit\n\t: ", 0, 1);
+            if (opt == 0) {
+                System.out.println("System is turned off!");
+                programClose = true;
+                break;
+            }
+
+            guiLineDivider();
+
+            // Perform the system update in a single method
+            handleSystemUpdate(scanner, element);
+        }
+
+        scanner.close();
+        guiLineDivider();
+    }
+
+    private static short getUserOption(Scanner scanner, String prompt, int min, int max) {
+        short opt;
+        while (true) {
+            System.out.print(prompt);
+            try {
+                opt = scanner.nextShort();
+                if (opt >= min && opt <= max) {
+                    break;
+                } else {
+                    System.out.println("Invalid option. Please choose between " + min + " and " + max + ".");
+                }
+            } catch (Exception e) {
+                handleInvalidInput(scanner);
+            }
+        }
+        return opt;
+    }
+
+    private static void handleSystemUpdate(Scanner scanner, Element element) {
+        // Unified menu options for all updates
+        String[] options = {
+                "Light ON/OFF", "Shading ON/OFF", "Fan ON/OFF",
+                "Change Temperature", "Number of People in room"
+        };
+        short opt = getUserOption(scanner, options);
+
+        switch (opt) {
+            case 1:
+                updateElement(scanner, element, "Light", "Light ON", "Light OFF");
+                break;
+            case 2:
+                updateElement(scanner, element, "Shading", "Shading UP", "Shading DOWN");
+                break;
+            case 3:
+                updateElement(scanner, element, "Fan", "Fan ON", "Fan OFF");
+                break;
+            case 4:
+                changeTemperature(scanner, element);
+                break;
+            case 5:
+                updatePeople(scanner, element);
+                break;
+        }
+    }
+
+    private static void updateElement(Scanner scanner, Element element, String elementName, String onMessage, String offMessage) {
+        short opt = getUserOption(scanner, "Choose an option:\n\t1. " + onMessage + "\n\t2. " + offMessage + "\n\t: ", 1, 2);
+        if (opt == 1) {
+            if (!element.get("People").isOn) {
+                System.out.println(onMessage + " failed. No people in the room.");
+            } else if (element.get(elementName).isOn) {
+                System.out.println(elementName + " already ON.");
+            } else {
+                element.set(elementName, new ElementStatus(true, -1));
+                System.out.println(onMessage + " successfully.");
+            }
+        } else {
+            if (!element.get(elementName).isOn) {
+                System.out.println(elementName + " already OFF.");
+            } else {
+                element.set(elementName, new ElementStatus(false, -1));
+                System.out.println(offMessage + " successfully.");
+            }
+        }
+    }
+
+    private static void changeTemperature(Scanner scanner, Element element) {
+        short temp = getUserOption(scanner, "Set room temperature:\n\t[15°C - 35°C]: ", 15, 35);
+        if (!element.get("People").isOn) {
+            System.out.println("Cannot change room temperature. No people in the room.");
+        } else if (temp <= 25) {
+            element.set("AC", new ElementStatus(true, temp));
+            element.set("Heater", new ElementStatus(false, -1));
+            System.out.println("AC set to " + temp + "°C.");
+        } else {
+            element.set("Heater", new ElementStatus(true, temp));
+            element.set("AC", new ElementStatus(false, -1));
+            System.out.println("Heater set to " + temp + "°C.");
+        }
+    }
+
+    private static void updatePeople(Scanner scanner, Element element) {
+        short peopleCount = getUserOption(scanner, "Number of people in the room:\n\t[0 - 5 People]: ", 0, 5);
+        if (peopleCount == 0) {
+            element.turnOff();
+            System.out.println("No people in the room. All systems turned off.");
+        } else {
+            element.set("People", new ElementStatus(true, peopleCount));
+            element.set("Light", new ElementStatus(true, -1));
+            element.set("AC", new ElementStatus(true, 23));
+            System.out.println(peopleCount + " people in the room. Systems updated.");
+        }
+    }
+
+    private static short getUserOption(Scanner scanner, String[] options) {
+        while (true) {
+            System.out.println("Choose an option to update:");
+            for (int i = 0; i < options.length; i++) {
+                System.out.println("\t" + (i + 1) + ". " + options[i]);
+            }
+            return getUserOption(scanner, ": ", 1, options.length);
+        }
+    }
+}
 
