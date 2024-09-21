@@ -14,4 +14,5 @@ IoT-based home automation system is a simple, Java-based approach to automate an
 ![image](https://github.com/user-attachments/assets/bece4239-7773-4ae7-a5cd-9b944a36e478)
 
 
+## Detailed Project Report
 https://docs.google.com/document/d/17GBmrvFy3kvl9HMOM7SiIh7iyrYXjr4qhwti_JmmYHE/edit?usp=sharing
