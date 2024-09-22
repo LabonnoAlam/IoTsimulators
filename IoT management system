@@ -1,1 +1,170 @@
+package com.iot.iotstimulator;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+// Custom Pair class
+class Pair<K, V> {
+    private K key;
+    private V value;
+
+    public Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public K getKey() {
+        return key;
+    }
+
+    public V getValue() {
+        return value;
+    }
+}
+
+// Element class to manage smart home elements
+class Element {
+    private Map<String, Pair<Boolean, Short>> elementsMap;
+
+    public Element() {
+        turnOff();
+    }
+
+    public void showStatus() {
+        System.out.println("Current Status of Elements:");
+        for (Map.Entry<String, Pair<Boolean, Short>> entry : elementsMap.entrySet()) {
+            String name = entry.getKey();
+            Pair<Boolean, Short> state = entry.getValue();
+            System.out.println(name + ": " + (state.getKey() ? "ON" : "OFF") + " (Value: " + state.getValue() + ")");
+        }
+    }
+
+    public void set(String ele, Pair<Boolean, Short> state) {
+        elementsMap.put(ele, state);
+    }
+
+    public void turnOff() {
+        elementsMap = new HashMap<>();
+        Pair<Boolean, Short> defaultPair = new Pair<>(false, (short) -1);
+        elementsMap.put("Light", defaultPair);
+        elementsMap.put("Shading", defaultPair);
+        elementsMap.put("Fan", defaultPair);
+        elementsMap.put("AC", defaultPair);
+        elementsMap.put("Heater", defaultPair);
+        elementsMap.put("Temperature", defaultPair);
+        elementsMap.put("People", defaultPair);
+    }
+}
+
+// Main class to interact with the user
+public class Main {
+    public static int getValidInt(Scanner scanner, int min, int max) {
+        int value;
+        while (true) {
+            if (scanner.hasNextInt()) {
+                value = scanner.nextInt();
+                if (value >= min && value <= max) {
+                    break;
+                } else {
+                    System.out.print("Invalid input! Enter a number between " + min + " and " + max + ": ");
+                }
+            } else {
+                System.out.print("Invalid input! Please enter a number: ");
+                scanner.next(); // Clear invalid input
+            }
+        }
+        return value;
+    }
+
+    public static short getValidShort(Scanner scanner, short min, short max) {
+        short value;
+        while (true) {
+            if (scanner.hasNextShort()) {
+                value = scanner.nextShort();
+                if (value >= min && value <= max) {
+                    break;
+                } else {
+                    System.out.print("Invalid input! Enter a number between " + min + " and " + max + ": ");
+                }
+            } else {
+                System.out.print("Invalid input! Please enter a number: ");
+                scanner.next(); // Clear invalid input
+            }
+        }
+        return value;
+    }
+
+    public static void main(String[] args) {
+        Element element = new Element();
+        Scanner scanner = new Scanner(System.in);
+        boolean exit = false;
+
+        while (!exit) {
+            System.out.println("\n----- Smart Home Automation -----");
+            element.showStatus();
+            System.out.println("\nChoose an option to control:");
+            System.out.println("1. Light ON/OFF");
+            System.out.println("2. Shading UP/DOWN");
+            System.out.println("3. Fan ON/OFF");
+            System.out.println("4. Set Temperature");
+            System.out.println("5. Number of People");
+            System.out.println("0. Exit");
+            System.out.print("Enter choice: ");
+
+            int choice = getValidInt(scanner, 0, 5);
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter 1 to turn ON the Light, 2 to turn OFF: ");
+                    int lightChoice = getValidInt(scanner, 1, 2);
+                    element.set("Light", new Pair<>(lightChoice == 1, (short) -1));
+                    break;
+
+                case 2:
+                    System.out.print("Enter 1 to pull Shading UP, 2 for DOWN: ");
+                    int shadeChoice = getValidInt(scanner, 1, 2);
+                    element.set("Shading", new Pair<>(shadeChoice == 1, (short) -1));
+                    break;
+
+                case 3:
+                    System.out.print("Enter 1 to turn ON the Fan, 2 to turn OFF: ");
+                    int fanChoice = getValidInt(scanner, 1, 2);
+                    element.set("Fan", new Pair<>(fanChoice == 1, (short) -1));
+                    break;
+
+                case 4:
+                    System.out.print("Set Temperature (15°C - 35°C): ");
+                    short temp = getValidShort(scanner, (short) 15, (short) 35);
+                    if (temp <= 25) {
+                        element.set("AC", new Pair<>(true, temp));
+                        element.set("Heater", new Pair<>(false, (short) -1));
+                    } else {
+                        element.set("Heater", new Pair<>(true, temp));
+                        element.set("AC", new Pair<>(false, (short) -1));
+                    }
+                    break;
+
+                case 5:
+                    System.out.print("Enter number of people in the room (0 - 5): ");
+                    short people = getValidShort(scanner, (short) 0, (short) 5);
+                    element.set("People", new Pair<>(people > 0, people));
+                    if (people > 0) {
+                        element.set("Light", new Pair<>(true, (short) -1));
+                    }
+                    break;
+
+                case 0:
+                    System.out.println("Exiting...");
+                    exit = true;
+                    break;
+
+                default:
+                    System.out.println("Invalid choice! Please choose again.");
+            }
+        }
+
+        scanner.close();
+    }
+}
 
