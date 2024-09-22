@@ -250,4 +250,15 @@ public class IoTManagementSystem {
                         System.out.println("All systems turned off as there are no people in the room.");
                     } else {
                         element.set("People", new ElementStatus(true, people));
-                        element
+                        System.out.println(people + " people in the room.");
+                    }
+                    break;
+                } else {
+                    System.out.println("Please enter a number between 0 and 5.");
+                }
+            } catch (InputMismatchException e) {
+                handleInvalidInput(scanner);
+            }
+        }
+    }
+}
